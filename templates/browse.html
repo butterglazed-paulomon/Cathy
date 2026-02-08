@@ -1,39 +1,91 @@
-<html>
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
 <head>
-	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-	<link rel="stylesheet" href='/static/main.css' />
-	<title>{{ dirname }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ dirname }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href='/static/main.css' />
 </head>
-    <body>
-    	<h1><a href="/"> &#8962</a> {{ dirname }}
-    		{% if pdir == "root": %}
-    	            <form action="/disksearch/{{ dirname }}" method="POST">
-                <div class="form-group">
-                    <input type="text" class="form-control" id="search" name="search" placeholder="Enter search term">
-                </div>
-            </form>
-            {% endif %}
-             
-		</h1><hl>
-    	<table>
-    		<th class="left"><table><tr><td class="left"><a href="#" onclick=window.location.replace("?sort=name")>Name</td>
-                <td>
-                </td></tr></table></th>
-    		<th><a href="#" onclick=window.location.replace("?sort=size")>Size</th>
-        {% if pdir != "root": %}
-        <tr><td class="left"><a href="/browse/{{ title }}/{{ pdir }}">..</td></tr>
-        {% else %}
-        <tr><td class="left"><a href="/" target="_top">..</td></tr>
+<body>
+
+    <nav class="navbar navbar-expand-lg border-bottom border-body" style="background-color: var(--bs-tertiary-bg);">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-hdd-rack-fill me-2"></i>Paulomon Archives
+        </a>
+        <button class="btn btn-outline-secondary rounded-circle" id="themeToggle"><i class="bi bi-moon-stars-fill" id="themeIcon"></i></button>
+      </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="d-flex align-items-center mb-3">
+            <a href="/" class="btn btn-outline-secondary me-3"><i class="bi bi-house-door-fill"></i></a>
+            <h4 class="mb-0 text-truncate"><i class="bi bi-folder2-open me-2"></i>{{ dirname }}</h4>
+        </div>
+
+        {% if pdir == "root": %}
+        <form action="/disksearch/{{ dirname }}" method="POST" class="mb-3">
+            <div class="input-group">
+                <input type="text" class="form-control" id="search" name="search" placeholder="Search within this disk...">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+            </div>
+        </form>
         {% endif %}
-        {% for file in files: %}
-        <tr>            
-        {% if file[2] != "" : %}
-	        <td class="left"><a href="/browse/{{ title }}/{{ file[2] }}">{{ file[0] }}</td><td align=right>{{ file[1] }} kB</td>
-	    {% else %}
-	        <td class="left">{{ file[0] }}</td><td align=right>{{ file[1] }} kB</td>
-	    {% endif %} 
-		</tr>
-	    {% endfor %}
-        </table>
+
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 70%;"><a href="#" onclick='window.location.replace("?sort=name")' class="text-decoration-none text-dark">Name <i class="bi bi-sort-alpha-down"></i></a></th>
+                            <th scope="col" style="width: 30%;" class="text-end"><a href="#" onclick='window.location.replace("?sort=size")' class="text-decoration-none text-dark">Size <i class="bi bi-sort-numeric-down"></i></a></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="2">
+                                {% if pdir != "root": %}
+                                    <a href="/browse/{{ title }}/{{ pdir }}" class="text-decoration-none fw-bold text-primary"><i class="bi bi-arrow-return-right me-2"></i>.. (Parent Directory)</a>
+                                {% else %}
+                                    <a href="/" class="text-decoration-none fw-bold text-primary"><i class="bi bi-arrow-return-right me-2"></i>.. (Disk List)</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% for file in files: %}
+                        <tr>
+                            <td>
+                                {% if file[2] != "" : %}
+                                    <i class="bi bi-folder-fill text-warning me-2"></i>
+                                    <a href="/browse/{{ title }}/{{ file[2] }}" class="text-decoration-none fw-medium">{{ file[0] }}</a>
+                                {% else %}
+                                    <i class="bi bi-file-earmark-text text-secondary me-2"></i>{{ file[0] }}
+                                {% endif %}
+                            </td>
+                            <td class="text-end font-monospace small text-muted">{{ file[1] }} kB</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+      const htmlEl = document.documentElement;
+      const toggleBtn = document.getElementById('themeToggle');
+      const icon = document.getElementById('themeIcon');
+      const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      
+      const setTheme = (theme) => {
+        htmlEl.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
+        icon.className = theme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+      };
+      setTheme(savedTheme);
+      toggleBtn.addEventListener('click', () => setTheme(htmlEl.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark'));
+    </script>
 </body>
 </html>

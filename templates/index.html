@@ -1,79 +1,119 @@
-<html>
-    <head>
-	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-        <link rel="stylesheet" href='/static/main.css' />
-        <title>{{ title }}</title>
-    </head>
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href='/static/main.css' />
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-lg border-bottom border-body" style="background-color: var(--bs-tertiary-bg);">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/">
+          <i class="bi bi-hdd-rack-fill me-2"></i>Paulomon Archives
+        </a>
+        <button class="btn btn-outline-secondary rounded-circle" id="themeToggle" title="Toggle Light/Dark Mode">
+          <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+        </button>
+      </div>
+    </nav>
+
+    <div class="container py-4">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-bold"><i class="bi bi-device-hdd me-2"></i>Disk List</span>
+        </div>
+        
+        <div class="card-body">
+          <form action="/search" method="POST" class="mb-4">
+            <div class="row g-2 align-items-center">
+              <div class="col-md-9">
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-search"></i></span>
+                  <input type="text" class="form-control" id="search" name="search" placeholder="Search entire catalog..." onclick="boxtest()">
+                  <button class="btn btn-primary" type="submit">Search</button>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="form-check form-switch p-2 border rounded bg-body-tertiary d-flex align-items-center justify-content-center">
+                  <input class="form-check-input me-2" type="checkbox" role="switch" id="archiveToggle">
+                  <label class="form-check-label small fw-bold" for="archiveToggle">Include Archives</label>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <div class="table-responsive">
+            <table class="table table-hover align-middle table-striped" id="myTable">
+              <thead class="table-light">
+                <tr>
+                  <th onclick="sortTable(0)" role="button">Name <i class="bi bi-sort-alpha-down small text-muted"></i></th>
+                  <th onclick="sortTable(1)" role="button">Used</th>
+                  <th onclick="sortTable(2)" role="button">Free</th>
+                  <th onclick="sortTable(3)" role="button">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for file in files: %}
+                <tr class="{% if file[4] == 1 %}archive-row d-none{% endif %}">
+                  <td class="fw-medium">
+                    <i class="bi bi-hdd me-2 text-primary"></i>
+                    <a href="/browse/{{ file[0] }}/0" class="text-decoration-none text-reset">{{ file[0] }}</a>
+                    {% if file[4] == 1 %}<span class="badge bg-warning text-dark ms-2">Archive</span>{% endif %}
+                  </td>
+                  <td>{{ file[1] }} GB</td>
+                  <td>{{ file[2] }} GB</td>
+                  <td>{{ file[3] }} TB</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{url_for('static', filename='functions.9e84e97f4b6ae3b3d092f1d912226979.js')}}"></script>
     <script>
-        function myFunction() {
-          // Get the checkbox
-          var checkBox = document.getElementById("myCheck");
-          //console.log(text)
+      // 1. Dark Mode Logic
+      const htmlEl = document.documentElement;
+      const toggleBtn = document.getElementById('themeToggle');
+      const icon = document.getElementById('themeIcon');
+      
+      const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      
+      const setTheme = (theme) => {
+        htmlEl.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
+        icon.className = theme === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+      };
+      setTheme(savedTheme);
 
-          if (checkBox.checked == true){
-            // Get the output text
-            var text = document.getElementsByClassName("archive");
-            //console.log(text)
-            //console.log(text.length)
-            count = text.length
-            for(i=count-1;i>=0;i--)
-            {
-                console.log(text[i])
-                text[i].className="noarchive"
+      toggleBtn.addEventListener('click', () => {
+        setTheme(htmlEl.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark');
+      });
+
+      // 2. Archive Toggle Logic (Modernized)
+      const archiveSwitch = document.getElementById('archiveToggle');
+      if(archiveSwitch) {
+        archiveSwitch.addEventListener('change', function() {
+          const rows = document.querySelectorAll('.archive-row');
+          rows.forEach(row => {
+            // Toggle the 'd-none' class (Bootstrap's utility for display:none)
+            if (this.checked) {
+              row.classList.remove('d-none');
+            } else {
+              row.classList.add('d-none');
             }
-          } else {
-            // Get the output text
-            var text = document.getElementsByClassName("noarchive");
-            //console.log(text)
-            count = text.length
-            for(i=count-1;i>=0;i--)
-            {
-                text[i].className="archive"
-            }
-          }
-        }
+          });
+        });
+      }
 
-        function boxtest() {
-            console.log("boxtest")
-        }
-
+      function boxtest() { console.log("boxtest"); }
     </script>
-    <body>
-        <div align="center">
-        <h1>Disk List</h1><hl>
-            <form action="/search" method="POST">
-              <div class="form-group">
-                <h4><label>&#128269;</label>
-                <input type="text" class="form-control" id="search" name="search" onclick="boxtest()" placeholder="Enter search term">
-                <input type="checkbox" id="myCheck" onclick="myFunction()"> Search Archives
-                </h4>
-              </div>
-            </form>
-
-            <table id="myTable">
-                <tr>
-                <th onclick="sortTable(0)">Name</th>
-                <th onclick="sortTable(1)">Used</th>
-                <th onclick="sortTable(2)">Free</th>
-                <th onclick="sortTable(3)">Total</th>
-                </tr>
-
-                {% for file in files: %}
-                {% if file[4] == 1: %}
-                    <tr class="archive">
-                {% else %}
-                    <tr>
-                {% endif %}
-                        <td class="left"><a href="/browse/{{ file[0] }}/0">{{ file[0] }}</td>
-                        <td>{{ file[1] }} Gb</td>
-                        <td>{{ file[2] }} Gb</td>
-                        <td>{{ file[3] }} Tb</td>
-                    </tr>
- 
-        	    {% endfor %}
-            </table>
-        </div>
-
-    </body>
+  </body>
 </html>
